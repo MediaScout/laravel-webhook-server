@@ -2,6 +2,7 @@
 
 namespace Spatie\WebhookServer;
 
+use Illuminate\Foundation\Bus\PendingDispatch;
 use Illuminate\Support\Str;
 use Spatie\WebhookServer\BackoffStrategy\BackoffStrategy;
 use Spatie\WebhookServer\Exceptions\CouldNotCallWebhook;
@@ -143,7 +144,7 @@ class WebhookCall
 
     public function withHeaders(array $headers): self
     {
-        $this->headers = $headers;
+        $this->headers = array_merge($this->headers, $headers);
 
         return $this;
     }
@@ -176,18 +177,28 @@ class WebhookCall
         return $this;
     }
 
-    public function dispatch(): void
+    public function dispatch(): PendingDispatch
     {
         $this->prepareForDispatch();
 
-        dispatch($this->callWebhookJob);
+        return dispatch($this->callWebhookJob);
     }
 
+    /**
+     * @deprecated Will be removed in a future version in favor of dispatchSync
+     */
     public function dispatchNow(): void
+    {
+        $this->dispatchSync();
+    }
+
+    public function dispatchSync(): void
     {
         $this->prepareForDispatch();
 
-        dispatch_now($this->callWebhookJob);
+        function_exists('dispatch_sync')
+            ? dispatch_sync($this->callWebhookJob)
+            : dispatch_now($this->callWebhookJob);
     }
 
     protected function prepareForDispatch(): void

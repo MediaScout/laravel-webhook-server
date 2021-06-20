@@ -3,6 +3,7 @@
 namespace Spatie\WebhookServer\Tests;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\TransferStats;
 use Illuminate\Support\Facades\Event;
 use Mockery\MockInterface;
 use Spatie\TestTime\TestTime;
@@ -42,9 +43,19 @@ class CallWebhookJobTest extends TestCase
     }
 
     /** @test */
-    public function it_can_make_a_synchronous_webhook_call()
+    public function it_can_make_a_legacy_synchronous_webhook_call()
     {
         $this->baseWebhook()->dispatchNow();
+
+        $this
+            ->testClient
+            ->assertRequestsMade([$this->baseRequest()]);
+    }
+
+    /** @test */
+    public function it_can_make_a_synchronous_webhook_call()
+    {
+        $this->baseWebhook()->dispatchSync();
 
         $this
             ->testClient
@@ -237,6 +248,8 @@ class CallWebhookJobTest extends TestCase
                     'Content-Type' => 'application/json',
                     'Signature' => '1f14a62b15ba5095326d6c75c3e2e6b462dd71e1c4b7fbdac0f32309adb7be5f',
                 ],
+                'on_stats' => function (TransferStats $stats) {
+                },
             ],
         ];
 
@@ -256,6 +269,8 @@ class CallWebhookJobTest extends TestCase
                     'Content-Type' => 'application/json',
                     'Signature' => '1f14a62b15ba5095326d6c75c3e2e6b462dd71e1c4b7fbdac0f32309adb7be5f',
                 ],
+                'on_stats' => function (TransferStats $stats) {
+                },
             ],
         ];
 
